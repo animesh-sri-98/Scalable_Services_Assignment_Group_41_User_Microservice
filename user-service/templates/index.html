@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 30px;
+    background-color: #9da7a0;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+button {
+    margin-top: 15px;
+    padding: 12px 24px;
+    font-size: 18px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"] {
+    width: calc(100% - 24px);
+    padding: 12px;
+    margin: 10px 0;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background-color: #ffffff;
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+li:hover {
+    background-color: #f5f5f5;
+}
+
+  </style>
+    <title>User Microservice</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>User Management Service</h1>
+        <div id="response"></div>
+        <button onclick="getAllUsers()">Get All Users</button>
+        <h2>Create User</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="email" id="email" placeholder="Email">
+        <button onclick="createUser()">Create User</button>
+
+        <h2>Update User</h2>
+        <input type="number" id="userId" placeholder="User ID">
+        <input type="text" id="newUsername" placeholder="New Username">
+        <input type="email" id="newEmail" placeholder="New Email">
+        <button onclick="updateUser()">Update User</button>
+
+        <h2>Delete User</h2>
+        <input type="number" id="deleteUserId" placeholder="User ID">
+        <button onclick="deleteUser()">Delete User</button>
+
+        <h2>Get Orders for User</h2>
+        <input type="number" id="orderUserId" placeholder="User ID">
+        <button onclick="getOrdersByUserId()">Get Orders</button>
+    </div>
+
+    <script>
+        function createUser() {
+            var username = document.getElementById('username').value;
+            var email = document.getElementById('email').value;
+
+            if (!username || !email) {
+                alert('Please enter both username and email.');
+                return;
+            }
+
+            fetch('/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = 'User created successfully. User ID: ' + data.user_id;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'Error creating user.';
+            });
+        }
+
+        function getAllUsers() {
+            fetch('/users', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                var usersHtml = '<h2>All Users</h2><ul>';
+                data.forEach(user => {
+                    usersHtml += '<li>User ID: ' + user.user_id + ', Username: ' + user.username + ', Email: ' + user.email + '</li>';
+                });
+                usersHtml += '</ul>';
+                document.getElementById('response').innerHTML = usersHtml;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'Error fetching users.';
+            });
+        }
+
+        function updateUser() {
+            var userId = parseInt(document.getElementById('userId').value);
+            var newUsername = document.getElementById('newUsername').value;
+            var newEmail = document.getElementById('newEmail').value;
+
+            if (!userId || !newUsername || !newEmail) {
+                alert('Please enter User ID, new username, and new email.');
+                return;
+            }
+
+            fetch(`/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: newUsername,
+                    email: newEmail
+                })
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    document.getElementById('response').innerText = 'User details updated successfully.';
+                } else if (response.status === 404) {
+                    document.getElementById('response').innerText = 'User not found.';
+                } else {
+                    document.getElementById('response').innerText = 'Error updating user details.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'Error updating user details.';
+            });
+        }
+
+
+        function deleteUser() {
+            var userId = parseInt(document.getElementById('deleteUserId').value);
+
+            if (!userId) {
+                alert('Please enter User ID.');
+                return;
+            }
+
+            fetch(`/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    document.getElementById('response').innerText = 'User deleted successfully.';
+                } else if (response.status === 404) {
+                    document.getElementById('response').innerText = 'User not found.';
+                } else {
+                    document.getElementById('response').innerText = 'Error deleting user.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'Error deleting user.';
+            });
+        }
+
+        function getOrdersByUserId() {
+            var userId = parseInt(document.getElementById('orderUserId').value);
+
+            if (!userId) {
+                alert('Please enter User ID.');
+                return;
+            }
+
+            fetch(`/users/${userId}/orders`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error('Error fetching orders.');
+                }
+            })
+            .then(data => {
+                var ordersHtml = '<h2>Orders for User ID ' + userId + '</h2><ul>';
+                data.forEach(order => {
+                    ordersHtml += '<li>Order ID: ' + order.order_id + ', Status: ' + order.status + '</li>';
+                });
+                ordersHtml += '</ul>';
+                document.getElementById('response').innerHTML = ordersHtml;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'Error fetching orders.';
+            });
+        }
+
+    </script>
+</body>
+
+</html>
