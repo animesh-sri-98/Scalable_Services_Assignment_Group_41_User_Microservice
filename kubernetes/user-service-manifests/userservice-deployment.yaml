@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-microservice
+  namespace: scalable-svc
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: user-microservice
+  template:
+    metadata:
+      labels:
+        app: user-microservice
+    spec:
+      containers:
+      - name: user-microservice
+        image: animeshsri98/user-microservice:latest
+        ports:
+        - containerPort: 9998

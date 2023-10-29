@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-microservice
+  namespace: scalable-svc
+  labels:                           # Added labels section
+    app: user-microservice 
+    namespace: scalable-svc
+spec:
+  selector:
+    app: user-microservice
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9998
+  type: LoadBalancer # Use LoadBalancer type if you are on a cloud provider that supports it
